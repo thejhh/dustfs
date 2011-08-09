@@ -46,7 +46,7 @@ module.exports = (function() {
 		if(compiled[name]) return compiled[name];
 		var source = fs.readFileSync(file, "UTF-8");
 		    compiled[name] = dust.compile(source, name);
-		console.log("Template compiled: " + file + " as " + name);
+		//console.log("Template compiled: " + file + " as " + name);
 		return compiled[name];
 	}
 	
@@ -56,7 +56,7 @@ module.exports = (function() {
 		if(!file) throw new Error("file not defined");
 		var c = do_compile(file, name);
 		dust.loadSource(c);
-		console.log("Template loaded: " + file + " as " + name);
+		//console.log("Template loaded: " + file + " as " + name);
 		return c;
 	}
 	
@@ -95,7 +95,7 @@ module.exports = (function() {
 			}
 			do_load(dir+"/"+name, name);
 		}
-		console.log("Rendering template: " + name);
+		//console.log("Rendering template: " + name);
 		dust.render(name, context, callback);
 	}
 	
@@ -105,7 +105,7 @@ module.exports = (function() {
 			dirs.push(dir);
 			fs.readdir(dir, function(err, files) {
 				if(err) {
-					console.log(err);
+					//console.log(err);
 					return;
 				}
 				foreach(files).do(function(file) {
