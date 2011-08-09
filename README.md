@@ -92,3 +92,31 @@ Results for `node partial.js`:
 	[dustfs] [partial.dust] Rendering template...
 	Output:
 	<body><div id="header">Hello, Captain Jack!</div><div id="content">This is our own content.</div></body>
+
+dustfs.dirs()
+-------------
+
+There is multiple ways to call `dustfs.dirs`.
+
+Full syntax is:
+	[returns EventEmiter] dustfs.dirs(dir[, dir2[, ...[, callback]]])
+
+Note that dustfs.render() will also wait for any ongoing call to dirs() so handling callbacks is not required.
+
+Call to `dustfs.dirs(dir[, dir2[, ...]])` returns an EventEmitter which can be 
+used to catch errors or to catch when the loading has ended:
+
+	var loading = dustfs.dirs('templates', 'docroot');
+	loading.on('error', function(err) {
+		console.log('Error: '+err);
+	});
+	loading.on('end', function() {
+		console.log('Loading done!');
+	});
+
+Call to `dustfs.dirs(dir[, callback])` is a second way to handle events:
+
+	var loading = dustfs.dirs('templates', function(err) {
+		if(err) console.log('Errors: ' + err);
+		else console.log('Loading done!');
+	});

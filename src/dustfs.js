@@ -161,6 +161,7 @@ module.exports = (function() {
 			fs.readdir(dir, function(err, files) {
 				var error_summary;
 				if(err) {
+					session.emit('error', err);
 					errs.push(err);
 				} else {
 					foreach(files).do(function(file) {
