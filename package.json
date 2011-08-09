@@ -1,0 +1,19 @@
+{
+  "author": "Jaakko-Heikki Heusala <jheusala@iki.fi> (http://www.jhh.me)",
+  "name": "dustfs",
+  "description": "Simplified interface to {dust} and file templates for Node.js",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jheusala/dustfs.git"
+  },
+  "main": "src/dustfs.js",
+  "engines": {
+    "node": "~v0.4.10"
+  },
+  "dependencies": {
+    "dust": ">=0.3.0",
+    "snippets": ">=0.0.5"
+  },
+  "devDependencies": {}
+}
