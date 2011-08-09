@@ -22,7 +22,8 @@
  */
 
 module.exports = (function() {
-	var dust = require('dust'),
+	var debug = false,
+	    dust = require('dust'),
 	    fs = require('fs'),
 	    path = require('path'),
 	    foreach = require('snippets').foreach,
@@ -46,7 +47,7 @@ module.exports = (function() {
 		if(compiled[name]) return compiled[name];
 		var source = fs.readFileSync(file, "UTF-8");
 		    compiled[name] = dust.compile(source, name);
-		//console.log("Template compiled: " + file + " as " + name);
+		if(debug) console.log("Template compiled: " + file + " as " + name);
 		return compiled[name];
 	}
 	
@@ -56,7 +57,7 @@ module.exports = (function() {
 		if(!file) throw new Error("file not defined");
 		var c = do_compile(file, name);
 		dust.loadSource(c);
-		//console.log("Template loaded: " + file + " as " + name);
+		if(debug) console.log("Template loaded: " + file + " as " + name);
 		return c;
 	}
 	
@@ -95,7 +96,7 @@ module.exports = (function() {
 			}
 			do_load(dir+"/"+name, name);
 		}
-		//console.log("Rendering template: " + name);
+		if(debug) console.log("Rendering template: " + name);
 		dust.render(name, context, callback);
 	}
 	
@@ -105,7 +106,7 @@ module.exports = (function() {
 			dirs.push(dir);
 			fs.readdir(dir, function(err, files) {
 				if(err) {
-					//console.log(err);
+					console.log(err);
 					return;
 				}
 				foreach(files).do(function(file) {
@@ -116,8 +117,15 @@ module.exports = (function() {
 		});
 	}
 	
+	/* Enable or disable debug to console */
+	function do_debug(enabled) {
+		debug = (enabled === true) ? true : false;
+	}
+	
 	/* Export functions */
 	
+	mod.debug = do_debug;
+
 	mod.search_dir = search_dir;
 	mod.compile = do_compile;
 	mod.load = do_load;
