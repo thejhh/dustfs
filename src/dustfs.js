@@ -101,18 +101,22 @@ module.exports = (function() {
 	}
 	
 	/* Set directories to search files */
-	function do_dirs() {
+	function do_dirs(callback) {
+		var dirs_left = arguments.length,
+			errs = [];
 		foreach(arguments).do(function(dir) {
 			dirs.push(dir);
 			fs.readdir(dir, function(err, files) {
 				if(err) {
-					console.log(err);
-					return;
+					errs.push(err);
+				} else {
+					foreach(files).do(function(file) {
+						if(path.extname(file) !== ".dust") return;
+						do_load(dir+"/"+file, file);
+					});
 				}
-				foreach(files).do(function(file) {
-					if(path.extname(file) != ".dust") return;
-					do_load(dir+"/"+file, file);
-				});
+				dirs_left--;
+				if(dirs_left === 0) callback( (errs.length === 0) ? undefined : 'There was ' + errs.length + ' errors:\n * ' + errs.join('\n * ' );
 			});
 		});
 	}
