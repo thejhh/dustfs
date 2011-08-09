@@ -96,12 +96,15 @@ Results for `node partial.js`:
 dustfs.dirs()
 -------------
 
+`dustfs.dirs(directory)` will compile and load all .dust files from the directory. 
+
 There is multiple ways to call `dustfs.dirs`.
 
 Full syntax is:
 	[returns EventEmiter] dustfs.dirs(dir[, dir2[, ...[, callback]]])
 
-Note that dustfs.render() will also wait for any ongoing call to dirs() so handling callbacks is not required.
+Note that using callbacks is not required since dustfs.render() will also wait 
+for any ongoing loading.
 
 Call to `dustfs.dirs(dir[, dir2[, ...]])` returns an EventEmitter which can be 
 used to catch errors or to catch when the loading has ended:
@@ -119,4 +122,15 @@ Call to `dustfs.dirs(dir[, callback])` is a second way to handle events:
 	var loading = dustfs.dirs('templates', function(err) {
 		if(err) console.log('Errors: ' + err);
 		else console.log('Loading done!');
+	});
+
+dustfs.render()
+-------------
+
+Call to `dustfs.render(name, context, callback)` will render the named template 
+with provided context, and after that execute the callback with results:
+
+	dustfs.render('partial.dust', {'name':'Captain Jack'}, function(err, out) {
+		if(err) console.log('Error: '+err);
+		else console.log('Output:\n' + out);
 	});
