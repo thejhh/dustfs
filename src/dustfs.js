@@ -31,7 +31,7 @@ module.exports = (function() {
 		_dirs = [],
 		_mod = {},
 	    _dir_load_id = 0,
-	    _dirs_loads = {},
+	    _dirs_loading = {},
 	    EventEmitter = require('events').EventEmitter;
 	
 	/* Wait until ongoing loading is finished */
@@ -45,7 +45,7 @@ module.exports = (function() {
 			callback( (errors.length === 0) ? undefined : 'Errors:\n * ' + errors.join(' * \n') );
 		}
 		
-		foreach(_dirs_loads).do(function(e, id) {
+		foreach(_dirs_loading).do(function(e, id) {
 			events++;
 			e.on('end', function(err) {
 				if(err) errors.push(err);
@@ -74,7 +74,7 @@ module.exports = (function() {
 		if(_compiled[name]) return _compiled[name];
 		var source = fs.readFileSync(file, "UTF-8");
 		    _compiled[name] = dust.compile(source, name);
-		if(_debug) console.log("Template _compiled: " + file + " as " + name);
+		if(_debug) console.log("[dustfs] [" + name + "] Template compiled from " + file);
 		return _compiled[name];
 	}
 	
@@ -84,7 +84,7 @@ module.exports = (function() {
 		if(!file) throw new Error("file not defined");
 		var c = do_compile(file, name);
 		dust.loadSource(c);
-		if(_debug) console.log("Template loaded: " + file + " as " + name);
+		if(_debug) console.log("[dustfs] [" + name + "] Template loaded: " + file);
 		return c;
 	}
 	
@@ -112,10 +112,12 @@ module.exports = (function() {
 	}
 	
 	/* Render template with dust */
-	function do_render(name, context, callback) {
+	function do_render(name, user_context, callback) {
+		if(_debug) console.log("[dustfs] [" + name + "] Waiting until directory loading is done before rendering...");
 		wait_loading(function(err) {
-			if(err) console.log(err);
-			var context = do_create_context(context),
+			if(err) console.log("[dustfs] " + err);
+			if(_debug) console.log("[dustfs] [" + name + "] Loading done! Let's render!");
+			var context = do_create_context(user_context),
 			    dir;
 			if(!_compiled[name]) {
 				dir = search_dir(name);
@@ -125,7 +127,7 @@ module.exports = (function() {
 				}
 				do_load(dir+"/"+name, name);
 			}
-			if(_debug) console.log("Rendering template: " + name);
+			if(_debug) console.log("[dustfs] ["+name+"] Rendering template...");
 			dust.render(name, context, callback);
 		});
 	}
@@ -168,7 +170,7 @@ module.exports = (function() {
 				}
 				dirs_left--;
 				if(dirs_left === 0) {
-					error_summary = (errs.length === 0) ? undefined : 'There was ' + errs.length + ' errors:\n * ' + errs.join('\n * ';
+					error_summary = (errs.length === 0) ? undefined : 'There was ' + errs.length + ' errors:\n * ' + errs.join('\n * ');
 					if(callback) callback(error_summary);
 					session.emit('end', error_summary);
 					delete _dirs_loading[_dir_load_id];
