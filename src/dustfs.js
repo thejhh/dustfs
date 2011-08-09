@@ -22,19 +22,46 @@
  */
 
 module.exports = (function() {
-	var debug = false,
+	var _debug = false,
 	    dust = require('dust'),
 	    fs = require('fs'),
 	    path = require('path'),
 	    foreach = require('snippets').foreach,
-	    compiled = {},
-		dirs = [],
-		mod = {};
+	    _compiled = {},
+		_dirs = [],
+		_mod = {},
+	    _dir_load_id = 0,
+	    _dirs_loads = {},
+	    EventEmitter = require('events').EventEmitter;
+	
+	/* Wait until ongoing loading is finished */
+	function wait_loading(callback) {
+		var undefined,
+		    events = 0,
+		    foreach_loading = true,
+		    errors = [];
+		
+		function do_end() {
+			callback( (errors.length === 0) ? undefined : 'Errors:\n * ' + errors.join(' * \n') );
+		}
+		
+		foreach(_dirs_loads).do(function(e, id) {
+			events++;
+			e.on('end', function(err) {
+				if(err) errors.push(err);
+				events--;
+				if( (!foreach_loading) && (events === 0) ) do_end();
+			});
+		});
+		
+		foreach_loading = false;
+		if(events === 0) do_end();
+	}
 	
 	/* Returns the directory where file exists */
 	function search_dir(file) {
 		var matches = [];
-		foreach(dirs).do(function(dir) {
+		foreach(_dirs).do(function(dir) {
 			if(path.existsSync(dir+"/"+file)) matches.push(dir);
 		});
 		if(matches.length != 0) return matches.shift();
@@ -44,11 +71,11 @@ module.exports = (function() {
 	function do_compile(file, name) {
 		var name = name || file;
 		if(!file) throw new Error("file not defined");
-		if(compiled[name]) return compiled[name];
+		if(_compiled[name]) return _compiled[name];
 		var source = fs.readFileSync(file, "UTF-8");
-		    compiled[name] = dust.compile(source, name);
-		if(debug) console.log("Template compiled: " + file + " as " + name);
-		return compiled[name];
+		    _compiled[name] = dust.compile(source, name);
+		if(_debug) console.log("Template _compiled: " + file + " as " + name);
+		return _compiled[name];
 	}
 	
 	/* Load template from filesystem */
@@ -57,7 +84,7 @@ module.exports = (function() {
 		if(!file) throw new Error("file not defined");
 		var c = do_compile(file, name);
 		dust.loadSource(c);
-		if(debug) console.log("Template loaded: " + file + " as " + name);
+		if(_debug) console.log("Template loaded: " + file + " as " + name);
 		return c;
 	}
 	
@@ -83,30 +110,54 @@ module.exports = (function() {
 		
 		return context;
 	}
-
+	
 	/* Render template with dust */
 	function do_render(name, context, callback) {
-		var context = do_create_context(context),
-		    dir;
-		if(!compiled[name]) {
-			dir = search_dir(name);
-			if(!dir) {
-				callback("Could not find template: "+name);
-				return;
+		wait_loading(function(err) {
+			if(err) console.log(err);
+			var context = do_create_context(context),
+			    dir;
+			if(!_compiled[name]) {
+				dir = search_dir(name);
+				if(!dir) {
+					callback("Could not find template: "+name);
+					return;
+				}
+				do_load(dir+"/"+name, name);
 			}
-			do_load(dir+"/"+name, name);
-		}
-		if(debug) console.log("Rendering template: " + name);
-		dust.render(name, context, callback);
+			if(_debug) console.log("Rendering template: " + name);
+			dust.render(name, context, callback);
+		});
 	}
 	
 	/* Set directories to search files */
-	function do_dirs(callback) {
-		var dirs_left = arguments.length,
-			errs = [];
+	function do_dirs() {
+		var undefined,
+		    dirs = [],
+			errs = [], 
+		    callback,
+		    dirs_left,
+		    session = new EventEmitter();
+		
+		_dir_load_id++;
+		
+		_dirs_loading[_dir_load_id] = session;
+		
 		foreach(arguments).do(function(dir) {
 			dirs.push(dir);
+		});
+		
+		callback = dirs.pop();
+		if(! (callback && typeof callback === 'function') ) {
+			dirs.push(callback);
+			callback = undefined;
+		}
+		
+		dirs_left = dirs.length;
+		
+		foreach(dirs).do(function(dir) {
 			fs.readdir(dir, function(err, files) {
+				var error_summary;
 				if(err) {
 					errs.push(err);
 				} else {
@@ -116,28 +167,35 @@ module.exports = (function() {
 					});
 				}
 				dirs_left--;
-				if(dirs_left === 0) callback( (errs.length === 0) ? undefined : 'There was ' + errs.length + ' errors:\n * ' + errs.join('\n * ' );
+				if(dirs_left === 0) {
+					error_summary = (errs.length === 0) ? undefined : 'There was ' + errs.length + ' errors:\n * ' + errs.join('\n * ';
+					if(callback) callback(error_summary);
+					session.emit('end', error_summary);
+					delete _dirs_loading[_dir_load_id];
+				}
 			});
 		});
+		
+		return session;
 	}
 	
 	/* Enable or disable debug to console */
 	function do_debug(enabled) {
-		debug = (enabled === true) ? true : false;
+		_debug = (enabled === true) ? true : false;
 	}
 	
 	/* Export functions */
 	
-	mod.debug = do_debug;
+	_mod.debug = do_debug;
 
-	mod.search_dir = search_dir;
-	mod.compile = do_compile;
-	mod.load = do_load;
+	_mod.search_dir = search_dir;
+	_mod.compile = do_compile;
+	_mod.load = do_load;
 	
-	mod.render = do_render;
-	mod.dirs = do_dirs;
+	_mod.render = do_render;
+	_mod.dirs = do_dirs;
 	
-	return mod;
+	return _mod;
 })();
 
 /* EOF */
