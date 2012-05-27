@@ -23,7 +23,7 @@
 
 module.exports = (function() {
 	var _debug = false,
-	    dust = require('dust'),
+	    dust = require('dustjs-linkedin'),
 	    fs = require('fs'),
 	    path = require('path'),
 	    foreach = require('snippets').foreach,

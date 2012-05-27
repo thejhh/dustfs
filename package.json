@@ -9,10 +9,10 @@
   },
   "main": "src/dustfs.js",
   "engines": {
-    "node": ">=0.4.0"
+    "node": ">=0.6.0"
   },
   "dependencies": {
-    "dust": ">=0.3.0",
+    "dustjs-linkedin": "dustjs-linkedin",
     "snippets": ">=0.0.5"
   },
   "devDependencies": {}
