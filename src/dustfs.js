@@ -62,7 +62,7 @@ module.exports = (function() {
 	function search_dir(file) {
 		var matches = [];
 		foreach(_dirs).do(function(dir) {
-			if(path.existsSync(dir+"/"+file)) matches.push(dir);
+			if(fs.existsSync(dir+"/"+file)) matches.push(dir);
 		});
 		if(matches.length != 0) return matches.shift();
 	}
