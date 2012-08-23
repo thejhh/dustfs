@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/jheusala/dustfs.png)](http://travis-ci.org/jheusala/dustfs)
 
 {dust} with fs
 ==============
