@@ -33,6 +33,7 @@ module.exports = (function() {
 	    _dir_load_id = 0,
 	    _dirs_loading = {},
 	    EventEmitter = require('events').EventEmitter;
+	    dust.helper = require('dustjs-helpers');
 	
 	/* Wait until ongoing loading is finished */
 	function wait_loading(callback) {
